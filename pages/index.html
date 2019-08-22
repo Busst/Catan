@@ -35,6 +35,44 @@
           padding-left: 2px;
         }
 
+        .resource {
+          display: inline;
+        }
+
+        ul {
+          list-style-type: none;
+        }
+        li {
+          float: left;
+          margin-top: 5px;
+          margin-right: 10px;
+        }
+        ul.resource li {
+          width: 100px;
+          padding: 2px;
+          border: 1px solid black;
+          display: block;
+        }
+        ul.resource li div p{
+          padding: 2px;
+          margin: 2px;
+          text-align: center;
+        }
+        ul.resource li input {
+          display: inline-block;
+          width: 30%;
+          margin: 0 auto;
+          text-align: center;
+        }
+        ul.resource li button {
+          display: inline;
+          margin: 0;
+          text-align: center;
+        }
+        ul.resource li div div {
+          text-align: center;
+        }
+
     </style>
     <script src="/socket.io/socket.io.js"></script>
   </head>
@@ -44,9 +82,67 @@
       </ul>
       <input id="command_line" placeholder="Welcome Settler">
     </div>
-    
+    <ul class="resource">
+      <li>
+        <div id="sheep">
+          <p>sheep</p>
+          <p>0</p>
+          <div>
+            <button id="neg">-</button>
+            <input id="sheep input" type="text" placeholder="0">
+            <button id="pos">+</button>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div id="ore">
+          <p>ore</p>
+          <p>0</p>
+          <div>
+            <button id="neg">-</button>
+            <input id="ore input" type="text" placeholder="0">
+            <button id="pos">+</button>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div id="lumber">
+          <p>lumber</p>
+          <p>0</p>
+          <div>
+            <button id="neg">-</button>
+            <input id="lumber input" type="text" placeholder="0">
+            <button id="pos">+</button>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div id="brick">
+          <p>brick</p>
+          <p>0</p>
+          <div>
+            <button id="neg">-</button>
+            <input id="brick input" type="text" placeholder="0">
+            <button id="pos">+</button>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div id="grain">
+          <p>grain</p>
+          <p>0</p>
+          <div>
+            <button id="neg">-</button>
+            <input id="grain input" type="text" placeholder="0">
+            <button id="pos">+</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <div>
+      <input id="notes" type="text" placeholder="notes">
+    </div>
   </body>
-  <script src="/static/client/catan.js"></script>
 
-  
+  <script src="/static/client/catan.js"></script>
 </html>

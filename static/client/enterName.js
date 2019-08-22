@@ -8,17 +8,15 @@ var command_line = document.getElementById('command_line');
 command_line.addEventListener("keydown", keyDownHandler, false);
 command_line.addEventListener("keyup", keyUpHandler, false);
 
-socket.on("hello", function(data) {
-    console.log(data);
-});
-
 var keyDown = false;
+var name = "";
 function keyDownHandler(event) {
     var keyPressed = event.keyCode;
     if (!keyDown && keyPressed === 13) {
         var line = command_line.value;
         command_line.value = "";
         keyDown = true;
+        name = line;
         socket.emit("name_addition", line);
         
     }
@@ -31,7 +29,9 @@ function keyUpHandler(event) {
 }
 
 socket.on("name good", function(data) {
-    location.replace(window.location.href + 'game');
+    location.replace(window.location.href + 'game?name='+data);
+    document.cookie = name;
+    
 });
 
 socket.on("name bad", function(data) {

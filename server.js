@@ -14,6 +14,7 @@ app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, 'pages/init.html'));
 });
 app.get('/game', function(request, response) {
+    
     response.sendFile(path.join(__dirname, 'pages/index.html'));
 });
 
@@ -34,6 +35,27 @@ io.on('connection', function(socket) {
             socket.emit("name bad", "Name already taken");
         }
     });
+
+    socket.on('all', function(data) {
+        socket.broadcast.emit('message', data);
+    });
+
+    socket.on('help', function(data) {
+        socket.broadcast.emit('message', data);
+    });
+
+    socket.on('w', function(data) {
+        //socket.broadcast.emit('message', data);
+    });
+
+    socket.on('r', function(data) {
+        //socket.broadcast.emit('message', data);
+    });
+
+    socket.on('t', function(data) {
+        socket.broadcast.emit('message', data);
+    });
+
 });
 
 function checkName(name) {
