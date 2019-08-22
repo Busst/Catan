@@ -11,15 +11,47 @@ app.set('port', 3000);
 app.use('/static', express.static(__dirname + '/static'));
 // Routing
 app.get('/', function(request, response) {
-    response.sendFile(path.join(__dirname, 'index.html'));
+    response.sendFile(path.join(__dirname, 'pages/init.html'));
+});
+app.get('/game', function(request, response) {
+    response.sendFile(path.join(__dirname, 'pages/index.html'));
 });
 
 // Starts the server.
 server.listen(3000, function() {
-    console.log('Starting server on port 5000');
+    console.log('Starting server on port 3000');
 });
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) { 
-    
+    idToSocket[players] = socket;
+    socket.on("name_addition", function(data) {
+        if (checkName(data)) {
+            idToPlayer[players] = data;
+            socket.emit("name good", data);
+            players++;
+        } else {
+            socket.emit("name bad", "Name already taken");
+        }
+    });
 });
+
+function checkName(name) {
+    if (name.length <= 0) {
+        return false;
+    }
+    for (var n in idToPlayer) {
+        if (idToPlayer[n] === name) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
+var idToSocket = [];
+var playerToId = {};
+var idToPlayer = [];
+
+var players = 0;

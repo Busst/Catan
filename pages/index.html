@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>Settlers of Catan</title>
+    <style>
+        #text_box {
+          width: 50%;
+          height: 300px;
+          border: 1px solid black;
+          margin: 0;
+          display: block;
+          overflow: auto;
+          position: relative;
+        }
+
+        #command_line {
+          position: absolute;
+          width: 100%;
+          border-style: solid;
+          border: none;
+          border-top: 1px solid black;
+          padding-left: 2px;
+          bottom: 0px;
+        }
+
+        .server_text {
+          margin: 0;
+          padding: 5px;
+          display: block;
+        }
+
+        #chat_list {
+          list-style: none;
+          margin: 0px;
+          padding: 0px;
+          padding-left: 2px;
+        }
+
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <div id="text_box">
+      <ul id="chat_list">
+      </ul>
+      <input id="command_line" placeholder="Welcome Settler">
+    </div>
+    
+  </body>
+  <script src="/static/client/catan.js"></script>
+
+  
+</html>
