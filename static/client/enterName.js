@@ -8,6 +8,9 @@ var command_line = document.getElementById('command_line');
 command_line.addEventListener("keydown", keyDownHandler, false);
 command_line.addEventListener("keyup", keyUpHandler, false);
 
+localStorage.setItem('uUID', Math.random().toString(24) + new Date());
+socket.emit("userLogin", localStorage.getItem('uUID'));
+
 var keyDown = false;
 var name = "";
 function keyDownHandler(event) {
@@ -30,7 +33,7 @@ function keyUpHandler(event) {
 
 socket.on("name good", function(data) {
     location.replace(window.location.href + 'game?name='+data);
-    document.cookie = name;
+    //document.cookie = name;
     
 });
 

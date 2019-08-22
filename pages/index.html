@@ -82,59 +82,64 @@
       </ul>
       <input id="command_line" placeholder="Welcome Settler">
     </div>
+    <button id="buy settlement"  onclick="buttonHandler(this)">buy settlement</button>
+    <button id="buy road"  onclick="buttonHandler(this)">buy road</button>
+    <button id="buy city"  onclick="buttonHandler(this)">buy city</button>
+    <button id="dev card" onclick="buttonHandler(this)">buy dev card</button>
+    
     <ul class="resource">
       <li>
-        <div id="sheep">
+        <div>
           <p>sheep</p>
-          <p>0</p>
+          <p id="num">0</p>
           <div>
-            <button id="neg">-</button>
-            <input id="sheep input" type="text" placeholder="0">
-            <button id="pos">+</button>
+            <button onclick="buttonResourceHandler(this)" id="neg">-</button>
+            <input id="sheep" type="text" placeholder="0">
+            <button onclick="buttonResourceHandler(this)" id="pos">+</button>
           </div>
         </div>
       </li>
       <li>
-        <div id="ore">
+        <div>
           <p>ore</p>
-          <p>0</p>
+          <p id="num">0</p>
           <div>
-            <button id="neg">-</button>
-            <input id="ore input" type="text" placeholder="0">
-            <button id="pos">+</button>
+            <button onclick="buttonResourceHandler(this)" id="neg">-</button>
+            <input id="ore" type="text" placeholder="0">
+            <button onclick="buttonResourceHandler(this)" id="pos">+</button>
           </div>
         </div>
       </li>
       <li>
-        <div id="lumber">
+        <div>
           <p>lumber</p>
-          <p>0</p>
+          <p id="num">0</p>
           <div>
-            <button id="neg">-</button>
-            <input id="lumber input" type="text" placeholder="0">
-            <button id="pos">+</button>
+            <button onclick="buttonResourceHandler(this)" id="neg">-</button>
+            <input id="lumber" type="text" placeholder="0">
+            <button onclick="buttonResourceHandler(this)" id="pos">+</button>
           </div>
         </div>
       </li>
       <li>
-        <div id="brick">
+        <div>
           <p>brick</p>
-          <p>0</p>
+          <p id="num">0</p>
           <div>
-            <button id="neg">-</button>
-            <input id="brick input" type="text" placeholder="0">
-            <button id="pos">+</button>
+            <button onclick="buttonResourceHandler(this)" id="neg">-</button>
+            <input id="brick" type="text" placeholder="0">
+            <button onclick="buttonResourceHandler(this)" id="pos">+</button>
           </div>
         </div>
       </li>
       <li>
-        <div id="grain">
+        <div>
           <p>grain</p>
-          <p>0</p>
+          <p id="num">0</p>
           <div>
-            <button id="neg">-</button>
-            <input id="grain input" type="text" placeholder="0">
-            <button id="pos">+</button>
+            <button onclick="buttonResourceHandler(this)" id="neg">-</button>
+            <input id="grain" type="text" placeholder="0">
+            <button onclick="buttonResourceHandler(this)" id="pos">+</button>
           </div>
         </div>
       </li>
@@ -142,10 +147,65 @@
     <div>
       <input id="notes" type="text" placeholder="notes">
     </div>
-    <button id="settlement">buy settlement</button>
-    <button id="settlement">buy road</button>
-    <button id="settlement">buy city</button>
-    <button id="settlement">buy dev card</button>
+    
+    <ul>
+    
+      <li>
+        <div id="victory card">
+          <p>victory card</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="knight">
+          <p>knight</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="monopoly">
+          <p>monopoly</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="years of plenty">
+          <p>year of plenty</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="road building">
+          <p>road building</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="road">
+          <p>roads</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="settlement">
+          <p>settlements</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="city">
+          <p>cities</p>
+          <p>0</p>
+        </div>
+      </li>
+      <li>
+        <div id="victory point">
+          <p>victory points</p>
+          <p>0</p>
+        </div>
+      </li>
+    </ul>
+
   </body>
 
   <script src="/static/client/catan.js"></script>
