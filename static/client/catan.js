@@ -20,6 +20,7 @@ function keyDownHandler(event) {
         list.appendChild(span);
         command_line.value = "";
         keyDown = true;
+        
         sendToServer(line);
     }
 }
@@ -78,10 +79,10 @@ socket.on("message", function(data) {
         var div = document.getElementById(stuff[1]).parentElement.parentElement;
         
         handleResources(div, parseInt(stuff[0]));
-    } 
-    
+    }
     span.setAttribute('margin', "0");
     span.setAttribute('padding', "0");
+    span.setAttribute('display', "block");
     list.appendChild(span);
 });
 

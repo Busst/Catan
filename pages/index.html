@@ -3,7 +3,7 @@
     <title>Settlers of Catan</title>
     <style>
         #text_box {
-          width: 50%;
+          width: 600px;
           height: 300px;
           border: 1px solid black;
           margin: 0;
@@ -13,13 +13,9 @@
         }
 
         #command_line {
-          position: absolute;
-          width: 100%;
-          border-style: solid;
-          border: none;
-          border-top: 1px solid black;
-          padding-left: 2px;
-          bottom: 0px;
+          width: 602px;
+          border: 1px solid black;
+          border-top: none;
         }
 
         .server_text {
@@ -39,15 +35,24 @@
           display: inline;
         }
 
+        .buttons button {
+          display: inline;
+          margin-left: 3px;
+          margin-right: 30px;
+        }
+        .buttons {
+          display: block;
+          margin-top: 15px;
+          margin-bottom: 15px;
+        }
+
         ul {
           list-style-type: none;
         }
-        li {
+        ul.resource li {
           float: left;
           margin-top: 5px;
           margin-right: 10px;
-        }
-        ul.resource li {
           width: 100px;
           padding: 2px;
           border: 1px solid black;
@@ -80,13 +85,14 @@
     <div id="text_box">
       <ul id="chat_list">
       </ul>
-      <input id="command_line" placeholder="Welcome Settler">
     </div>
-    <button id="buy settlement"  onclick="buttonHandler(this)">buy settlement</button>
-    <button id="buy road"  onclick="buttonHandler(this)">buy road</button>
-    <button id="buy city"  onclick="buttonHandler(this)">buy city</button>
-    <button id="dev card" onclick="buttonHandler(this)">buy dev card</button>
-    
+    <input id="command_line" placeholder="Welcome Settler">
+    <div class="buttons">
+      <button id="buy settlement"  onclick="buttonHandler(this)">buy settlement</button>
+      <button id="buy road"  onclick="buttonHandler(this)">buy road</button>
+      <button id="buy city"  onclick="buttonHandler(this)">buy city</button>
+      <button id="dev card" onclick="buttonHandler(this)">buy dev card</button>
+    </div>
     <ul class="resource">
       <li>
         <div>
@@ -144,9 +150,6 @@
         </div>
       </li>
     </ul>
-    <div>
-      <input id="notes" type="text" placeholder="notes">
-    </div>
     
     <ul>
     
