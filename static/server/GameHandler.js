@@ -53,7 +53,10 @@ class GameHandler {
         if (this.players[player] === undefined ||this.players[player]['grain'] === undefined) {
             return false;
         }
-        if (this.players[player]['grain'] < 1 || this.players[player]['ore'] < 1  || this.players[player]['sheep'] < 1 || this.dev_deck.getDeckSize() <= 0) {
+        if (this.dev_deck.getDeckSize() <= 0) {
+            return "empty";
+        }
+        if (this.players[player]['grain'] < 1 || this.players[player]['ore'] < 1  || this.players[player]['sheep'] < 1) {
             return false;
         }
         var card = this.dev_deck.drawDevCard();
@@ -61,9 +64,6 @@ class GameHandler {
         this.players[player]['ore']--;
         this.players[player]['grain']--;
         this.players[player]['sheep']--;
-        if (card === "victory card") {
-            this.players[player]["victory point"]++;
-        }
         return card;
     }
 
