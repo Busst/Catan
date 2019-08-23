@@ -30,6 +30,7 @@ server.listen(3000, function() {
 var users = [];
 var users_connected = [];
 var users_player = {};
+var player_users = {};
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) { 
@@ -43,6 +44,7 @@ io.on('connection', function(socket) {
         }
         if (uid !== null) {
             users_player[uid] = data;
+            player_users[data] = uid;
         } else {
             socket.emit('route', 'home');
         }
@@ -54,6 +56,7 @@ io.on('connection', function(socket) {
         if (users.indexOf(user_uid) < 0) {
             users.push(user_uid);
         }
+        
         uid = user_uid;
     });
     socket.on("userGameLogin", function(user_uid) {
@@ -75,6 +78,14 @@ io.on('connection', function(socket) {
     });
 
     socket.on('w', function(data) {
+        var message = users_player[uid] + ": " + data;
+        var broadcast = "whisper" + player_users[data.substring(data.indexOf(' '), data.length)];
+        console.log(player_users)
+        console.log(users_player)
+        console.log(uid);
+        console.log(message);
+        console.log(broadcast);
+
         //socket.broadcast.emit('message', data);
     });
 
@@ -83,7 +94,8 @@ io.on('connection', function(socket) {
     });
 
     socket.on('t', function(data) {
-        socket.broadcast.emit('message', data);
+        //socket.broadcast.emit('message', data);
+
     });
 
     socket.on("input", function(data) {
@@ -109,7 +121,16 @@ io.on('connection', function(socket) {
     socket.on('buy dev card', function(data) {
         var card = manager.buyDevCard(data)
         if (!card) {
-            socket.emit('err', 'Couldn\'t purchase dev card (either none left or lack of resouces)');
+            socket.emit('err', 'Can\'t afford dev card');
+            return;
+        }
+        if (card === "empty") {
+            var message = {
+                type: "message",
+                pre: "Development cards are ",
+                mes: card
+            }
+            socket.emit('message', message);
             return;
         }
         var message = {
@@ -118,6 +139,14 @@ io.on('connection', function(socket) {
             mes: card
         }
         socket.emit('message', message);
+        if (card === "victory card") {
+            message = {
+                type: "purchase",
+                pre: "you received a ",
+                mes: "victory point"
+            }
+            socket.emit('message', message);
+        }
         message = {
             type: 'resource',
             pre: users_player[uid] + " received ",
@@ -136,7 +165,7 @@ io.on('connection', function(socket) {
             mes: "-1 of grain"
         }
         socket.emit('message', message);
-        console.log("dev bought: " + card);
+        console.log(users_player[uid] + " dev bought: " + card);
     })
 
     socket.on('buy road', function(data) {
@@ -152,13 +181,6 @@ io.on('connection', function(socket) {
         }
         socket.emit('message', message);
         
-        var message3 = {
-            type: "purchase",
-            pre: "you received a ",
-            mes: "victory point"
-        }
-        
-        socket.emit('message', message3);
         var message2 = {
             type: "purchase",
             pre: data + " received a",

@@ -20,7 +20,7 @@ function keyDownHandler(event) {
         list.appendChild(span);
         command_line.value = "";
         keyDown = true;
-        
+
         sendToServer(line);
     }
 }
@@ -53,7 +53,6 @@ socket.on('resource update', function(data) {
     for (var v in data) {
         
         var id = document.getElementById(v);
-        console.log(id)
         if (id === null) {
             continue
         }
@@ -126,7 +125,6 @@ function handleResources(resource, change) {
     //var res = document.getElementById(resource);
     num = resource.childNodes[3];
     var temp = (parseInt(num.textContent) + change);
-    console.log(temp)
     num.textContent = "" + temp;
 }
 
