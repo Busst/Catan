@@ -30,7 +30,7 @@ server.listen(3000, function() {
 var users = [];
 var users_connected = [];
 var users_player = {};
-var player_users = {};
+var player_users = {}; 
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) { 
@@ -43,8 +43,11 @@ io.on('connection', function(socket) {
             socket.emit("name bad", "Name already taken");
         }
         if (uid !== null) {
-            users_player[uid] = data;
-            player_users[data] = uid;
+            users_player[uid] = {
+                name: data,
+                socket_id: socket.id
+            };
+            player_users[data] = socket;
         } else {
             socket.emit('route', 'home');
         }
@@ -60,17 +63,28 @@ io.on('connection', function(socket) {
         uid = user_uid;
     });
     socket.on("userGameLogin", function(user_uid) {
+        
         if (users.indexOf(user_uid) < 0) {
             socket.emit('route', 'home');
+            return;
         } else {
             socket.emit("resource update", manager.playerData(users_player[user_uid]));
         }
+        uid = user_uid;
+        var name = users_player[uid].name;
+        player_users[name] = socket;
         
     });
 
 
     socket.on('all', function(data) {
-        socket.broadcast.emit('message', data);
+        var mes = {
+            type: 'message',
+            pre: "",
+            mes: data
+        }
+        socket.broadcast.emit('message', mes);
+        socket.emit('message', mes);
     });
 
     socket.on('commands', function(data) {
@@ -78,15 +92,28 @@ io.on('connection', function(socket) {
     });
 
     socket.on('w', function(data) {
-        var message = users_player[uid] + ": " + data;
-        var broadcast = "whisper" + player_users[data.substring(data.indexOf(' '), data.length)];
-        console.log(player_users)
-        console.log(users_player)
-        console.log(uid);
-        console.log(message);
-        console.log(broadcast);
-
-        //socket.broadcast.emit('message', data);
+        var to_pos = data.mes.indexOf(' ');
+        if (to_pos < 0) {
+            //handle input error
+            socket.emit("err", "invalid name");
+            return;
+        }
+        var to = data.mes.substring(0, to_pos);
+        if (player_users[to] === undefined) {
+            //handle whisper error
+            socket.emit("err", "invalid name");
+            return;
+        }
+        var out = {
+            type: 'whisper',
+            pre: users_player[uid].name + ": ",
+            mes: data.mes.substring(to.length + 1, data.mes.length)
+        };
+        player_users[to].emit('message', out);
+        socket.emit('message', out)
+        //socket.broadcast.to(`${users_player[player_users[to]].socket_id}`).emit("message", out);
+        //io.to(users_player[player_users[to]].socket_id).emit('message', out);
+        //socket.to(`${users_player[player_users[to]].socket_id}`).emit("message", out);
     });
 
     socket.on('r', function(data) {
@@ -116,6 +143,14 @@ io.on('connection', function(socket) {
         }
         socket.emit('message', message);
         socket.broadcast.emit('message', message2);
+    });
+
+    socket.on('echo', function(data) {
+        socket.emit('message', {
+            type: 'message',
+            pre: 'me: ',
+            mes: data
+        });
     });
 
     socket.on('buy dev card', function(data) {
