@@ -12,15 +12,8 @@ function keyDownHandler(event) {
     var keyPressed = event.keyCode;
     if (!keyDown && keyPressed === 13) {
         var line = command_line.value;
-        var list = document.getElementById('chat_list');
-        var span = document.createElement('li');
-        span.textContent = "me: " + line;
-        span.setAttribute('margin', "0");
-        span.setAttribute('padding', "0");
-        list.appendChild(span);
         command_line.value = "";
         keyDown = true;
-
         sendToServer(line);
     }
 }
@@ -41,9 +34,14 @@ function sendToServer(message) {
             out = "";
         } else {
             mes = message.substring(1, pos);
-            out = message.substring(pos, message.length);
+            out = message.substring(pos + 1, message.length);
         }
-        socket.emit(mes, out);
+        var container = {
+            type: mes,
+            from: localStorage.getItem('uUID'),
+            mes: out,
+        };
+        socket.emit(mes, container);
     } else {
         socket.emit("all", name + ": " + message);
     }
@@ -67,6 +65,7 @@ socket.on('resource update', function(data) {
 })
 
 socket.on("message", function(data) {
+    console.log(data)
     var list = document.getElementById('chat_list');
     var span = document.createElement('li');
     span.textContent = data.pre + data.mes;
