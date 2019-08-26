@@ -9,6 +9,8 @@ socket.emit("userGameLogin", localStorage.getItem('uUID'));
 
 var keyDown = false;
 var trading = false;
+var stealing= false;
+var last_command = [];
 
 function keyDownHandler(event) {
     var keyPressed = event.keyCode;
@@ -31,21 +33,33 @@ function sendToServer(message) {
         var pos = message.search(" ");
         var mes = "";
         var out = "";
+        var sending = "";
         if (pos < 0) {
             mes = message.substring(1, message.length);
             out = "";
         } else {
             mes = message.substring(1, pos);
-            out = message.substring(pos + 1, message.length);
+            var sending_pos = message.indexOf(' ', pos+1);
+            if (sending_pos < 0) {
+                sending = message.substring(pos + 1,message.length);
+                out ="";
+            } else {
+                sending = message.substring(pos + 1, sending_pos);
+                out = message.substring(sending_pos + 1, message.length);
+            }
         }
+        
         if (trading) {
             mes = 't1'
         }
+        
         var container = {
             type: mes,
             from: localStorage.getItem('uUID'),
+            to: sending,
             mes: out,
         };
+        console.log(container);
         
         
         socket.emit(mes, container);
@@ -56,9 +70,6 @@ function sendToServer(message) {
 }
 
 socket.on('resource update', function(data) {
-    console.log("LOGGING")
-    console.log(data);
-    console.log(data.name)
     var data = data.data;
     for (var v in data) {
         var id = document.getElementById(v);
@@ -69,7 +80,6 @@ socket.on('resource update', function(data) {
         if (id.tagName === 'INPUT') {
             id = id.parentElement.parentElement;
         }
-        console.log(id)
         
         var value = data[v];
         handleResources(id, value);
@@ -83,7 +93,6 @@ socket.on('setInformation', function(data) {
 });
 
 socket.on("message", function(data) {
-    console.log(data);
     var list = document.getElementById('chat_list');
     var span = document.createElement('li');
     span.textContent = data.pre + data.mes;
@@ -92,8 +101,7 @@ socket.on("message", function(data) {
         //handleResources(document.getElementById(data.mes), 1);
         socket.emit('update', localStorage.getItem('uUID'));
     } else if (data.type === "resource") {
-        var stuff = data.mes.split(" of ");
-        var div = document.getElementById(stuff[1]).parentElement.parentElement;
+        
         socket.emit('update', localStorage.getItem('uUID'));
         
         //handleResources(div, parseInt(stuff[0]));
@@ -107,6 +115,10 @@ socket.on("message", function(data) {
 
             trading = true;
         }
+    } else if (data.type === 'stealing') {
+        span.setAttribute('class', 'steal');
+    } else if (data.type === 'purchase') {
+        span.setAttribute('class', 'purchase');
     }
     span.setAttribute('margin', "0");
     span.setAttribute('padding', "0");
@@ -132,7 +144,6 @@ function buttonResourceHandler(event){
         r_value: input_value
     }
     var test = input_value.match(/[a-zA-Z]/);
-    console.log(data);
     if (test === null && input_value !== "0"){
         socket.emit("input", data);
     } else {

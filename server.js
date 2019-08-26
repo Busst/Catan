@@ -26,11 +26,9 @@ server.listen(3000, function() {
     console.log('Starting server on port 3000');
 });
 
-
-var users = [];
-var users_connected = [];
 var users_player = {};
 var player_users = {}; 
+var events = {};
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) { 
@@ -50,7 +48,7 @@ io.on('connection', function(socket) {
             player_users[data] = socket;
             socket.emit("resource update", {name: data,data: manager.playerData(data)});
             socket.broadcast.emit("message", {type: 'message', pre: data, mes: ' connected!'})
-
+            events[data] = [];
         } else {
             socket.emit('route', 'home');
         }
@@ -100,7 +98,15 @@ io.on('connection', function(socket) {
                 socket.emit('route', 'home');
                 return;
             }
+        } else {
+            var d = data.mes.split(' ');
+            if (!manager.addResource(player, d[0], parseInt(d[1]))) {
+                socket.emit('route', 'home');
+                return;
+            }
         }
+
+
         socket.emit("resource update", {name: player,data: manager.playerData(player)});
         
        
@@ -121,29 +127,116 @@ io.on('connection', function(socket) {
         socket.emit('message', mes);
     });
 
-    socket.on('commands', function(data) {
-        //socket.emit('message', data);
+    socket.on('help', function(data) {
+        socket.emit('message', {type: 'message', pre: "",
+         mes: '/w [player name] [message]      whisper to a player'});
+        
+        socket.emit('message', {type: 'message', pre: "",
+         mes: '/s [player name]                 steal from a player'});
+         socket.emit('message', {type: 'message', pre: "",
+          mes: '/t [player name]                 trade with a player'});
+          socket.emit('message', {type: 'message', pre: "",
+           mes: '/all [player name] [resource] [value]                manually add resources'});
     });
 
+    socket.on('s', function(data) {
+
+        if (data.mes.length > 0) {
+            
+            var stealer;
+            var stolen_from = users_player[uid].name;
+            var stealer = data.to;
+            for (var e in events[stolen_from]) {
+                var event = events[stolen_from][e].split(' ');
+                if (event[0] === 'is_stealing' && event[1] === stealer) {
+                    if (data.mes === 'dne') {
+                        socket.emit('err', 'wrong input');
+                        return;
+                    }
+                    events[stolen_from].splice(e, 1);
+                    for (var del in  events[stealer]) {
+                        if (events[stealer][del] === 'stealing_from ' + stolen_from) {
+                            events[stealer].splice(del, 1);
+                        }
+                    }
+                    if (data.mes === 'no') {
+                        player_users[stealer].emit("err", "user declined");
+                        return;
+                    }
+                    break;
+                }
+                
+            }
+            if (stealer === undefined || stolen_from === undefined) {
+                socket.emit("err", "stealing undefined");
+                return;
+            }
+            if (manager.resourceNum(stolen_from) <= 0) {
+                socket.emit("err", "you have no resources");
+                player_users[stealer].emit("err", "user has no resources");
+                return;
+            }
+            var resource = manager.steal(stolen_from, stealer);
+            if (resource === undefined) {
+                socket.emit("err", "stealing error");
+                return;
+            }
+            manager.addResource(stolen_from, resource, -1);
+            manager.addResource(stealer, resource, 1);
+            var message = {
+                type: 'stealing',
+                pre: stealer + " ",
+                mes: "has stolen " + resource + " from " + stolen_from
+            };
+            socket.emit("message", message);
+            socket.broadcast.emit("message", message);
+            player_users[stealer].emit("resource update", {name: stealer,data: manager.playerData(stealer)});
+            socket.emit("resource update", {name: stolen_from,data: manager.playerData(stolen_from)});
+            
+        } else {
+            if (data.to.length <= 0) {
+                socket.emit("err", "invalid name input");
+                return;
+            }
+            var to = data.to;
+            if (player_users[to] === undefined) {
+                //handle whisper error
+                socket.emit("err", "name undefined");
+                return;
+            }
+            events[users_player[uid].name].push('stealing_from ' + to);
+            events[to].push('is_stealing ' + users_player[uid].name);
+            console.log(events);
+            console.log("steal check: " + users_player[uid].name);
+            var out = {
+                type: 'stealing',
+                pre: users_player[uid].name + " ",
+                mes: 'is trying to steal from you (/s [name] yes/no)'
+            };
+            player_users[to].emit('message', out);
+        }
+        
+    })
+
     socket.on('w', function(data) {
-        var to_pos = data.mes.indexOf(' ');
-        if (to_pos < 0) {
+        if (data.to <= 0) {
             //handle input error
             socket.emit("err", "invalid name");
             return;
         }
-        var to = data.mes.substring(0, to_pos);
+        var to = data.to;
         if (player_users[to] === undefined) {
             //handle whisper error
             socket.emit("err", "invalid name");
             return;
         }
-        console.log("whisper check: "+users_player[uid].name);
+        console.log("whisper check: " + users_player[uid].name);
         var out = {
             type: 'whisper',
             pre: users_player[uid].name + ": ",
-            mes: data.mes.substring(to.length + 1, data.mes.length)
+            mes: data.mes
         };
+        
         player_users[to].emit('message', out);
         socket.emit('message', out)
         
@@ -154,6 +247,10 @@ io.on('connection', function(socket) {
     });
 
     socket.on('t', function(data) {
+        socket.emit('err', 'not set up yet')
+        if (true) {
+            return;
+        }
         console.log(data);
         var to_pos = data.mes.indexOf(' ');
         if (to_pos < 0) to_pos = data.mes.length;

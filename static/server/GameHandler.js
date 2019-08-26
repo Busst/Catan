@@ -49,6 +49,34 @@ class GameHandler {
 
     }
 
+    steal(from, to) {
+        var numberOfResources = this.resourceNum(from);
+        var taking = Math.trunc(Math.random() * numberOfResources+1);
+        var cur_resource = this.players[from]['ore'];
+        var resource;
+        while (cur_resource-- > 0 && taking-- > 0){
+            resource = 'ore';
+        }
+        cur_resource = this.players[from]['lumber'];
+        while (cur_resource-- > 0 && taking-- > 0){
+            resource = 'lumber';
+        }
+        cur_resource = this.players[from]['grain'];
+        while (cur_resource-- > 0 && taking-- > 0){
+            resource = 'grain';
+        }
+        cur_resource = this.players[from]['sheep'];
+        while (cur_resource-- > 0 && taking-- > 0){
+            resource = 'sheep';
+        }
+        cur_resource = this.players[from]['brick'];
+        while (cur_resource-- > 0 && taking-- > 0){
+            resource = 'brick';
+        }
+        return resource;
+
+    }
+
     buyDevCard(player) {
         if (this.players[player] === undefined ||this.players[player]['grain'] === undefined) {
             return false;
@@ -65,6 +93,16 @@ class GameHandler {
         this.players[player]['grain']--;
         this.players[player]['sheep']--;
         return card;
+    }
+
+    resourceNum(player) {
+        var sum = 0;
+        sum += this.players[player]['ore'];
+        sum += this.players[player]['grain'];
+        sum += this.players[player]['sheep'];
+        sum += this.players[player]['lumber'];
+        sum += this.players[player]['brick'];
+        return sum;
     }
 
     buyRoad(player) {
