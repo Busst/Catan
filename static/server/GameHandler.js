@@ -124,7 +124,9 @@ class GameHandler {
     }
 
 
-
+    printGame(){
+        console.log(this.players);
+    }
 
 
 }

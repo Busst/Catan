@@ -48,33 +48,67 @@ io.on('connection', function(socket) {
                 socket_id: socket.id
             };
             player_users[data] = socket;
+            socket.emit("resource update", {name: data,data: manager.playerData(data)});
+            socket.broadcast.emit("message", {type: 'message', pre: data, mes: ' connected!'})
+
         } else {
             socket.emit('route', 'home');
         }
 
     });
 
-    socket.on("userLogin", function(user_uid) {
-        
-        if (users.indexOf(user_uid) < 0) {
-            users.push(user_uid);
-        }
-        
+    socket.on("userLogin", function(user_uid) {     
         uid = user_uid;
     });
     socket.on("userGameLogin", function(user_uid) {
-        
-        if (users.indexOf(user_uid) < 0) {
+        console.log(users_player[user_uid])
+        if (users_player[user_uid] === undefined) {    //whoyd do- you exghdfgdsfgsdfgdsdfsggdsfgdfgsdfgdfsgdfssg
             socket.emit('route', 'home');
             return;
-        } else {
-            socket.emit("resource update", manager.playerData(users_player[user_uid]));
         }
         uid = user_uid;
-        var name = users_player[uid].name;
-        player_users[name] = socket;
+        
+        var player_name = users_player[user_uid].name;
+        player_users[player_name] = socket;
+        socket.emit("resource update", {name: player_name,data: manager.playerData(player_name)});
         
     });
+
+    socket.on('add', function(data) {
+        var player = users_player[uid].name;
+        if (data.mes === 'all') {
+            if (!manager.addResource(player, 'ore', 10000)) {
+                socket.emit('route', 'home');
+                return;
+            }
+            
+            if (!manager.addResource(player, 'sheep', 10000)) {
+                socket.emit('route', 'home');
+                return;
+            }
+            
+            if (!manager.addResource(player, "lumber", 10000)) {
+                socket.emit('route', 'home');
+                return;
+            }
+            
+            if (!manager.addResource(player, "brick", 10000)) {
+                socket.emit('route', 'home');
+                return;
+            }
+            if (!manager.addResource(player, "grain", 10000)) {
+                socket.emit('route', 'home');
+                return;
+            }
+        }
+        socket.emit("resource update", {name: player,data: manager.playerData(player)});
+        
+       
+    })
+
+    socket.on('update', function(userid) {
+        socket.emit("resource update", {name: users_player[userid].name,data: manager.playerData(users_player[userid].name)});
+    })
 
 
     socket.on('all', function(data) {
@@ -104,6 +138,7 @@ io.on('connection', function(socket) {
             socket.emit("err", "invalid name");
             return;
         }
+        console.log("whisper check: "+users_player[uid].name);
         var out = {
             type: 'whisper',
             pre: users_player[uid].name + ": ",
@@ -111,9 +146,7 @@ io.on('connection', function(socket) {
         };
         player_users[to].emit('message', out);
         socket.emit('message', out)
-        //socket.broadcast.to(`${users_player[player_users[to]].socket_id}`).emit("message", out);
-        //io.to(users_player[player_users[to]].socket_id).emit('message', out);
-        //socket.to(`${users_player[player_users[to]].socket_id}`).emit("message", out);
+        
     });
 
     socket.on('r', function(data) {
@@ -121,8 +154,65 @@ io.on('connection', function(socket) {
     });
 
     socket.on('t', function(data) {
-        //socket.broadcast.emit('message', data);
+        console.log(data);
+        var to_pos = data.mes.indexOf(' ');
+        if (to_pos < 0) to_pos = data.mes.length;
+        var to = data.mes.substring(0, to_pos);
+        if (player_users[to] === undefined) {
+            //handle whisper error
+            socket.emit("err", "invalid name");
+            return;
+        }
+        var out = {
+            type: 'trade',
+            pre: "you  ",
+            mes: "asked to trade with " + to
+        };
+        socket.emit('message', out);
+        socket.emit('setInformation', {key: 'name', value: to})
 
+        out = {
+            type: 'trade',
+            pre: users_player[uid].name + " ",
+            mes: "wants to trade. (Yes/No)"
+        };
+        player_users[to].emit('message', out);
+    });
+    socket.on('t1', function(data) {
+        if (uid === null) {
+            socket.emit('route', 'home');
+            return;
+        }
+        // console.log(data);
+        // var to_pos = data.mes.indexOf(' ');
+        // if (to_pos < 0) to_pos = data.mes.length;
+        var yea = data.mes.substring(1, data.mes.length);
+        if (yea === "yes") {
+
+        } else if (yea === 'no') {
+
+        } else {
+            socket.emit("err", "invalid input for trade");
+        }
+        // if (player_users[to] === undefined) {
+        //     //handle whisper error
+        //     socket.emit("err", "invalid name");
+        //     return;
+        // }
+
+        var out = {
+            type: 'trade',
+            pre: "you  ",
+            mes: "declined"
+        };
+        socket.emit('message', out);
+
+        out = {
+            type: 'trade',
+            pre: users_player[uid].name + " ",
+            mes: "sdaf"
+        };
+        player_users[to].emit('message', out);
     });
 
     socket.on("input", function(data) {
@@ -143,6 +233,7 @@ io.on('connection', function(socket) {
         }
         socket.emit('message', message);
         socket.broadcast.emit('message', message2);
+        ///player_users[data.player].emit("resource update", manager.playerData(data.player));
     });
 
     socket.on('echo', function(data) {
@@ -168,6 +259,7 @@ io.on('connection', function(socket) {
             socket.emit('message', message);
             return;
         }
+        var player = users_player[uid].name;
         var message = {
             type: "card",
             pre: "received: ",
@@ -184,31 +276,34 @@ io.on('connection', function(socket) {
         }
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of ore"
         }
         socket.emit('message', message);
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of sheep"
         }
         socket.emit('message', message);
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of grain"
         }
         socket.emit('message', message);
-        console.log(users_player[uid] + " dev bought: " + card);
+        console.log(player + " dev bought: " + card);
+        //player_users[player].emit("resource update", manager.playerData(player));
     })
 
     socket.on('buy road', function(data) {
+        console.log(data);
         
         if (!manager.buyRoad(data)) {
             socket.emit('err', 'Couldn\'t purchase road');
             return;
         }
+        var player = users_player[uid].name;
         var message = {
             type: "purchase",
             pre: "received: ",
@@ -217,23 +312,24 @@ io.on('connection', function(socket) {
         socket.emit('message', message);
         
         var message2 = {
-            type: "purchase",
-            pre: data + " received a",
+            type: "message",
+            pre: data + " received a ",
             mes: "road"
         }
         socket.broadcast.emit('message', message2);
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of lumber"
         }
         socket.emit('message', message);
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of brick"
         }
         socket.emit('message', message);
+       // player_users[player].emit("resource update", manager.playerData(player));
     })
 
     socket.on('buy settlement', function(data) {
@@ -242,6 +338,7 @@ io.on('connection', function(socket) {
             socket.emit('err', 'Couldn\'t purchase settlement');
             return;
         }
+        var player = users_player[uid].name;
         var message = {
             type: "purchase",
             pre: "received: ",
@@ -258,13 +355,13 @@ io.on('connection', function(socket) {
         socket.emit('message', message3);
         var message2 = {
             type: "purchase",
-            pre: data + " received a",
+            pre: data + " received a ",
             mes: "settlement"
         }
         socket.broadcast.emit('message', message2);
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-1 of lumber"
         }
         socket.emit('message', message);
@@ -274,10 +371,15 @@ io.on('connection', function(socket) {
         socket.emit('message', message);
         message.mes = "-1 of brick";
         socket.emit('message', message);
+        //player_users[player].emit("resource update", manager.playerData(player));
     })
 
     socket.on('buy city', function(data) {
-        
+        if ( users_player[uid] === undefined) {
+            socket.emit('route', 'home');
+            return;
+        }
+        manager.printGame();
         if (!manager.buyCity(data)) {
             socket.emit('err', 'Couldn\'t purchase city');
             return;
@@ -288,8 +390,8 @@ io.on('connection', function(socket) {
             mes: "city"
         }
         var message2 = {
-            type: "purchase",
-            pre: data + " received a",
+            type: "message",
+            pre: data + " received a ",
             mes: "city"
         }
         socket.broadcast.emit('message', message2);
@@ -300,14 +402,16 @@ io.on('connection', function(socket) {
             mes: "victory point"
         }
         socket.emit('message', message3);
+        var player = users_player[uid].name;
         message = {
             type: 'resource',
-            pre: users_player[uid] + " received ",
+            pre: player + " received ",
             mes: "-3 of ore"
         }
         socket.emit('message', message);
         message.mes = "-2 of grain";
         socket.emit('message', message);
+        //player_users[player].emit("resource update", manager.playerData(player));
     })
 });
 
