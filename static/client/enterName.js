@@ -20,7 +20,7 @@ function keyDownHandler(event) {
         command_line.value = "";
         keyDown = true;
         name = line;
-        socket.emit("name_addition", line);
+        socket.emit("name_addition", name);
         
     }
 }

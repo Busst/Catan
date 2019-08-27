@@ -9,8 +9,8 @@ socket.emit("userGameLogin", localStorage.getItem('uUID'));
 
 var keyDown = false;
 var trading = false;
-var stealing= false;
 var last_command = [];
+var last_whispered = "";
 
 function keyDownHandler(event) {
     var keyPressed = event.keyCode;
@@ -48,9 +48,17 @@ function sendToServer(message) {
                 out = message.substring(sending_pos + 1, message.length);
             }
         }
-        
-        if (trading) {
-            mes = 't1'
+        if (mes === 'r') {
+            mes = 'w';
+            out = sending;
+            sending = last_whispered;   
+            if (sending.length <= 0) {
+                return;
+            }
+        }
+        if (mes === 'add' && sending !== name) {
+            out = sending+ " " + out;
+            sending = name;
         }
         
         var container = {
@@ -65,7 +73,7 @@ function sendToServer(message) {
         socket.emit(mes, container);
 
     } else {
-        socket.emit("all", name + ": " + message);
+        socket.emit("all", {from: localStorage.getItem('uUID'),mes: name + ": " + message});
     }
 }
 
@@ -93,12 +101,16 @@ socket.on('setInformation', function(data) {
 });
 
 socket.on("message", function(data) {
+    console.log(data);
     var list = document.getElementById('chat_list');
     var span = document.createElement('li');
     span.textContent = data.pre + data.mes;
     
-    if (data.type === "card" || data.type === "purchase") {
+     if (data.type === "card" || data.type === "purchase") {
         //handleResources(document.getElementById(data.mes), 1);
+        if (data.type === 'purchase') {
+            span.setAttribute('class', 'purchase');
+        } 
         socket.emit('update', localStorage.getItem('uUID'));
     } else if (data.type === "resource") {
         
@@ -106,24 +118,24 @@ socket.on("message", function(data) {
         
         //handleResources(div, parseInt(stuff[0]));
     } else if (data.type === 'whisper') {
+        if (data.metadata !== undefined) {
+            last_whispered = data.metadata;
+        }
         span.setAttribute('class', 'whisper');
     } else if (data.type === "trade") {
         span.setAttribute('class', 'trade');
-        if (trading) {
-            trading = false;
-        } else {
-
-            trading = true;
-        }
+        
     } else if (data.type === 'stealing') {
         span.setAttribute('class', 'steal');
-    } else if (data.type === 'purchase') {
-        span.setAttribute('class', 'purchase');
+    } else  if (data.type === 'information') {
+        span.setAttribute('class', 'information');
     }
     span.setAttribute('margin', "0");
     span.setAttribute('padding', "0");
     span.setAttribute('display', "block");
     list.appendChild(span);
+    var divObj = document.getElementById('text_box');
+    divObj.scrollTop = divObj.scrollHeight;
 });
 
 socket.on("err", function(data) {

@@ -23,8 +23,10 @@ app.get('/game', function(request, response) {
 
 // Starts the server.
 server.listen(3000, function() {
-    console.log('Starting server on port 3000');
+    console.log('Starting server on 10.0.1.11:3000');
 });
+
+
 
 var users_player = {};
 var player_users = {}; 
@@ -40,6 +42,7 @@ io.on('connection', function(socket) {
         } else {
             socket.emit("name bad", "Name already taken");
         }
+        
         if (uid !== null) {
             users_player[uid] = {
                 name: data,
@@ -57,10 +60,10 @@ io.on('connection', function(socket) {
 
     socket.on("userLogin", function(user_uid) {     
         uid = user_uid;
+        
     });
     socket.on("userGameLogin", function(user_uid) {
-        console.log(users_player[user_uid])
-        if (users_player[user_uid] === undefined) {    //whoyd do- you exghdfgdsfgsdfgdsdfsggdsfgdfgsdfgdfsgdfssg
+        if (users_player[user_uid] === undefined) {    
             socket.emit('route', 'home');
             return;
         }
@@ -68,12 +71,22 @@ io.on('connection', function(socket) {
         
         var player_name = users_player[user_uid].name;
         player_users[player_name] = socket;
+        users_player[uid].socket_id = socket.id;
         socket.emit("resource update", {name: player_name,data: manager.playerData(player_name)});
         
     });
 
     socket.on('add', function(data) {
+        if (users_player[uid] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
         var player = users_player[uid].name;
+        if (users_player[data.from] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
+        console.log(data);
         if (data.mes === 'all') {
             if (!manager.addResource(player, 'ore', 10000)) {
                 socket.emit('route', 'home');
@@ -100,9 +113,49 @@ io.on('connection', function(socket) {
             }
         } else {
             var d = data.mes.split(' ');
-            if (!manager.addResource(player, d[0], parseInt(d[1]))) {
-                socket.emit('route', 'home');
-                return;
+            if (d[0] !== 'overide') {
+                if (socket.id !== player_users[data.to].id) return;
+                if (d[0] === 'vp') {
+                    manager.addDevResource(data.to, 'victory point', 1);
+                    var message = {
+                        type: 'information',
+                        pre: player + " received a victory point for ",
+                        mes: 'a hairy pussy'
+                    }
+                    if (d[1] !== undefined || d[1].length <= 1) {
+                        message.mes = '';
+                        for (var i = 1; i < d.length; i++) {
+                            message.mes += d[i] + ' ';
+                        }
+                    }
+                    socket.emit('message', message);
+                    socket.broadcast.emit('message', message2);
+                } else {
+                    if (!manager.addResource(player, d[0], parseInt(d[1]))) {
+                        socket.emit('route', 'home');
+                        return;
+                    }
+                    var message = {
+                        type: 'resource',
+                        pre: player + " received ",
+                        mes: parseInt(d[1]) + " " + d[0]
+                    }
+                    var message2 = {
+                        type: 'message',
+                        pre: player + " received ",
+                        mes: parseInt(d[1]) + " " + d[0]
+                    }
+                    socket.emit('message', message);
+                    socket.broadcast.emit('message', message2);
+                }
+            } else {
+                
+                if (!manager.addResource(data.to, d[1], parseInt(d[2]))) {
+                    socket.emit('route', 'home');
+                    return;
+                }
+                socket.emit('message', {type:'message', pre: '', mes: '/add ' + data.to + ' ' + d[2] + ' ' + d[1]})
+
             }
         }
 
@@ -118,28 +171,43 @@ io.on('connection', function(socket) {
 
 
     socket.on('all', function(data) {
+        if (users_player[data.from] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
         var mes = {
             type: 'message',
             pre: "",
-            mes: data
+            mes: data.mes
         }
         socket.broadcast.emit('message', mes);
         socket.emit('message', mes);
     });
 
     socket.on('help', function(data) {
+        if (users_player[data.from] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
         socket.emit('message', {type: 'message', pre: "",
          mes: '/w [player name] [message]      whisper to a player'});
         
         socket.emit('message', {type: 'message', pre: "",
          mes: '/s [player name]                 steal from a player'});
-         socket.emit('message', {type: 'message', pre: "",
-          mes: '/t [player name]                 trade with a player'});
-          socket.emit('message', {type: 'message', pre: "",
-           mes: '/all [player name] [resource] [value]                manually add resources'});
+        socket.emit('message', {type: 'message', pre: "",
+         mes: '/t [player name]                 trade with a player'});
+        socket.emit('message', {type: 'message', pre: "",
+         mes: '/add [resource] [value]                manually add resources (vp for victory point)'});
+        socket.emit('message', {type: 'message', pre: "",
+         mes: '/r [message]                manually add resources'});
+            
     });
 
     socket.on('s', function(data) {
+        if (users_player[data.from] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
 
         if (data.mes.length > 0) {
             
@@ -218,7 +286,48 @@ io.on('connection', function(socket) {
         
     })
 
+    socket.on('reset', function(data) {
+        if (data.to !== 'game') {
+            socket.emit("err", 'no');
+        }
+        socket.emit('message', {type: 'message', pre: '',
+            mes: 'restarting in 5. exit now to change name'});
+        socket.broadcast.emit('message', {type: 'message', pre: '',
+            mes: 'restarting in 5. exit now to change name'});
+        var i = 4;
+        setInterval(function(){
+            
+            socket.emit('message', {type: 'message', pre: i,
+                mes: '...'});
+            socket.broadcast.emit('message', {type: 'message', pre: i,
+            mes: '...'});
+            if (--i <= 0) {
+                manager.reset();
+                
+                for (var name in player_users) {
+                    player_users[name].emit("route", 'home');
+                }
+                clearInterval(this);
+                
+            }
+            
+        }, 1000);
+        
+    })
+
+    socket.on('players', function(data){
+        for (name in player_users) {
+            socket.emit('message', {type: 'information', pre: name + " has ",
+                mes: manager.resourceNum(name) + ' resources'    
+            });
+        }
+    });  
+
     socket.on('w', function(data) {
+        if (users_player[data.from] === undefined) {    
+            socket.emit('route', 'home');
+            return;
+        }
         if (data.to <= 0) {
             //handle input error
             socket.emit("err", "invalid name");
@@ -236,10 +345,15 @@ io.on('connection', function(socket) {
             pre: users_player[uid].name + ": ",
             mes: data.mes
         };
-        
-        player_users[to].emit('message', out);
         socket.emit('message', out)
         
+        out = {
+            type: 'whisper',
+            pre: users_player[uid].name + ": ",
+            mes: data.mes,
+            metadata: users_player[uid].name
+        };
+        player_users[to].emit('message', out);
     });
 
     socket.on('r', function(data) {
@@ -321,12 +435,12 @@ io.on('connection', function(socket) {
         var message = {
             type: 'resource',
             pre: data.player + " received ",
-            mes: value + " of " + data.r_name
+            mes: value + " " + data.r_name
         }
         var message2 = {
             type: 'message',
             pre: data.player + " received ",
-            mes: value + " of " + data.r_name
+            mes: value + " " + data.r_name
         }
         socket.emit('message', message);
         socket.broadcast.emit('message', message2);
@@ -374,27 +488,15 @@ io.on('connection', function(socket) {
         message = {
             type: 'resource',
             pre: player + " received ",
-            mes: "-1 of ore"
+            mes: "-1 ore, -1 sheep, -1 grain"
         }
         socket.emit('message', message);
-        message = {
-            type: 'resource',
-            pre: player + " received ",
-            mes: "-1 of sheep"
-        }
-        socket.emit('message', message);
-        message = {
-            type: 'resource',
-            pre: player + " received ",
-            mes: "-1 of grain"
-        }
-        socket.emit('message', message);
-        console.log(player + " dev bought: " + card);
+        socket.broadcast.emit('message', {type: 'purchase', pre: users_player[uid].name + ' ', mes: 'purchased a dev card'});
+        socket.emit('message', {type: 'purchase', pre: users_player[uid].name + ' ', mes: 'purchased a dev card'});
         //player_users[player].emit("resource update", manager.playerData(player));
     })
 
     socket.on('buy road', function(data) {
-        console.log(data);
         
         if (!manager.buyRoad(data)) {
             socket.emit('err', 'Couldn\'t purchase road');
@@ -417,13 +519,7 @@ io.on('connection', function(socket) {
         message = {
             type: 'resource',
             pre: player + " received ",
-            mes: "-1 of lumber"
-        }
-        socket.emit('message', message);
-        message = {
-            type: 'resource',
-            pre: player + " received ",
-            mes: "-1 of brick"
+            mes: "-1 lumber, -1 brick"
         }
         socket.emit('message', message);
        // player_users[player].emit("resource update", manager.playerData(player));
@@ -459,16 +555,9 @@ io.on('connection', function(socket) {
         message = {
             type: 'resource',
             pre: player + " received ",
-            mes: "-1 of lumber"
+            mes: "-1 lumber, -1 sheep, -1 grain, -1 brick"
         }
         socket.emit('message', message);
-        message.mes = "-1 of sheep";
-        socket.emit('message', message);
-        message.mes = "-1 of grain";
-        socket.emit('message', message);
-        message.mes = "-1 of brick";
-        socket.emit('message', message);
-        //player_users[player].emit("resource update", manager.playerData(player));
     })
 
     socket.on('buy city', function(data) {
@@ -503,10 +592,8 @@ io.on('connection', function(socket) {
         message = {
             type: 'resource',
             pre: player + " received ",
-            mes: "-3 of ore"
+            mes: "-3 ore, -2 grain"
         }
-        socket.emit('message', message);
-        message.mes = "-2 of grain";
         socket.emit('message', message);
         //player_users[player].emit("resource update", manager.playerData(player));
     })

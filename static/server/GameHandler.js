@@ -40,13 +40,21 @@ class GameHandler {
         this.players[player][resource] += value;
         return true;
     }
+    addDevResource(player, resource, value) {
+        if (this.players[player] === undefined) return false;
+        this.players[player][resource] += value;
+        return true;
+    }
 
     start() {
 
     }
 
     reset() {
-
+        for (var name in this.players) {
+            delete this.players[name];
+        }
+        this.dev_deck = new deck('default');
     }
 
     steal(from, to) {
@@ -92,6 +100,9 @@ class GameHandler {
         this.players[player]['ore']--;
         this.players[player]['grain']--;
         this.players[player]['sheep']--;
+        if (card === 'victory card') {
+            this.players[player]['victory point']++;
+        }
         return card;
     }
 
@@ -165,6 +176,8 @@ class GameHandler {
     printGame(){
         console.log(this.players);
     }
+
+    
 
 
 }
