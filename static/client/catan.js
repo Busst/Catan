@@ -9,7 +9,8 @@ socket.emit("userGameLogin", localStorage.getItem('uUID'));
 
 var keyDown = false;
 var trading = false;
-var last_command = [];
+var last_command = [''];
+var last_command_pos = 0;
 var last_whispered = "";
 
 function keyDownHandler(event) {
@@ -17,15 +18,46 @@ function keyDownHandler(event) {
     if (!keyDown && keyPressed === 13) {
         var line = command_line.value;
         command_line.value = "";
+        last_command.push(line);
+        last_command_pos++;
         keyDown = true;
         sendToServer(line);
     }
+    if (!keyDown && keyPressed === 38) {
+        
+       
+        command_line.value = last_command[last_command_pos];
+        
+        last_command_pos--;
+        if (last_command_pos <= 0) last_command_pos = 0;
+        //keyDown = true;
+    }
+    if (!keyDown && keyPressed === 40) {
+        //keyDown = true;
+        last_command_pos++;
+        if (last_command_pos >= last_command.length) {
+            last_command_pos = last_command.length - 1;
+            command_line.value = "";
+        } else {
+            command_line.value = last_command[last_command_pos];
+        }
+        
+        
+        
+    }
+
 }
 
 function keyUpHandler(event) {
-    if (keyDown) {
+    var keyPressed = event.keyCode;
+    if (keyPressed === 13) {
+        keyDown = false;
+    } else if (keyPressed === 38) {//up
+        keyDown = false;
+    } else if (keyPressed === 40) {//down
         keyDown = false;
     }
+
 }
 
 function sendToServer(message) {

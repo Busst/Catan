@@ -26,6 +26,15 @@ server.listen(3000, function() {
     console.log('Starting server on 10.0.1.11:3000');
 });
 
+setInterval(function(){
+    for (var name in player_users) {
+        console.log(name);
+        console.log(manager.playerData(name));
+        console.log('\n');
+        
+    }
+}, 10000)
+
 
 
 var users_player = {};
